@@ -66,16 +66,31 @@ def extract(state: State) -> dict:
         hint = f"\n\n[직전 추출에서 누락/오류]: {', '.join(state['issues'])} — 이 필드를 특히 주의해 다시 추출하라."
     structured_llm = llm.with_structured_output(Invoice)
     inv: Invoice = structured_llm.invoke(
-        "다음 문서에서 vendor/date/total/items를 정확히 추출하라." + hint + "\n\n" + state["text"]
+        "다음 문서에서 vendor/date/total/items를 정확히 추출하라. "
+        "문서에 없는 필드는 추측하지 말고 비워라(null)." + hint + "\n\n" + state["text"]
     )
     print(f"[extract] {inv.model_dump()}")
     return {"extracted": inv.model_dump()}
 
 
+# 모델이 null 대신 채워넣는 placeholder 문자열들(= 사실상 '누락')
+_PLACEHOLDERS = {"", "not found", "n/a", "na", "none", "null", "unknown",
+                 "없음", "미상", "해당없음", "확인불가"}
+
+
+def _is_missing(v) -> bool:
+    """None·빈값·placeholder 문자열을 모두 '누락'으로 본다 (모델 환각 방어)."""
+    if v is None:
+        return True
+    if isinstance(v, str) and v.strip().lower() in _PLACEHOLDERS:
+        return True
+    return False
+
+
 # ── 노드 3: 검증 (규칙 기반 — 필수 필드 확인) ──
 def validate(state: State) -> dict:
     e = state["extracted"]
-    issues = [f"{k} 누락" for k in ("vendor", "date", "total") if not e.get(k)]
+    issues = [f"{k} 누락" for k in ("vendor", "date", "total") if _is_missing(e.get(k))]
     retries = state.get("retries", 0) + (1 if issues else 0)
     print(f"[validate] issues={issues} retries={retries}")
     return {"issues": issues, "retries": retries}

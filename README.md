@@ -73,12 +73,17 @@ vllm serve Qwen/Qwen3-30B-A3B \
   --max-model-len 16384 --gpu-memory-utilization 0.9
 # → OpenAI 호환 엔드포인트 http://localhost:8000/v1
 ```
+> ⚠️ 실전 함정: vLLM 최신 휠은 새 CUDA로 빌드된 torch를 끌고 온다. GPU 드라이버가
+> 그보다 낮으면(예: driver CUDA 12.4) 엔진 init 단계에서
+> `RuntimeError: The NVIDIA driver on your system is too old` 로 죽는다.
+> → 드라이버에 맞는 torch가 들어간 vLLM 버전을 고르거나, 아래 Ollama를 쓴다.
 
-**Ollama (마찰 0, 빠른 시작):**
+**Ollama (마찰 0, 빠른 시작 — 이 데모 검증에 실제 사용):**
 ```bash
-ollama pull qwen3:30b-a3b
+ollama pull qwen3:8b    # 또는 qwen3:30b-a3b
 ollama serve            # http://localhost:11434/v1
 ```
+> Ollama는 호환 CUDA 런타임을 자체 번들 → 드라이버 12.4에서도 그대로 GPU 추론.
 
 ### B) 에이전트 실행
 ```bash
@@ -110,11 +115,40 @@ DOC=다른문서.txt python agent.py
 
 ---
 
-## 4. 설계 의도 (면접용)
+## 4. 실제 검증 결과
+
+H100에 Ollama(`qwen3:8b`)를 띄워 end-to-end로 돌린 로그.
+
+**(1) 정상 영수증 → 한 번에 통과**
+```
+[classify] doc_type=영수증
+[extract] {'vendor': '한빛문구 강남점', 'date': '2026-06-24', 'total': 24100, 'items': [...]}
+[validate] issues=[] retries=0
+→ validation: ok
+```
+
+**(2) 상호·날짜 없는 결함 문서 → 사이클(재추출 루프)이 실제로 발동**
+```
+[extract]  {'vendor': None, 'date': None, 'total': 19600, ...}
+[validate] issues=['vendor 누락', 'date 누락'] retries=1   ← 검증 실패
+[extract]  {'vendor': None, 'date': None, 'total': 19600, ...}   ← extract로 되돌아옴(사이클)
+[validate] issues=['vendor 누락', 'date 누락'] retries=2
+→ 재시도 소진 → finalize, validation: ['vendor 누락','date 누락']
+```
+`extract → validate → extract → validate → finalize` — DAG 체인은 못 하는 **되돌아가기**가 로그에 그대로 찍힌다.
+
+> **검증 중 잡은 실전 버그**: 모델이 누락 필드를 `null`이 아니라 `"not found"` *문자열*로
+> 채워, 단순 falsy 검사(`if not e.get(k)`)를 통과시켜 루프가 안 돌았다. → 검증 노드에
+> placeholder 문자열(`"not found"`, `"없음"` 등)을 누락으로 정규화하는 `_is_missing()`을 추가.
+> (구조화 추출 모델의 흔한 환각 — *모델 출력을 믿지 말고 경계에서 검증*.)
+
+---
+
+## 5. 설계 의도 (면접용)
 
 - **왜 LangGraph?** 단순 추출은 체인으로 충분하지만, **검증→재시도 루프**처럼 *상태에 따라 되돌아가는 흐름*은 그래프가 자연스럽다. 에이전트 = 사이클이 필요한 워크플로.
 - **왜 RAG는 직접 짰나(graphrag) vs 여기선 LangGraph?** 검색 융합(RRF·rerank)은 세밀 제어가 필요해 커스텀이 나았고, **에이전트 워크플로는 상태·분기·관찰성을 LangGraph가 표준으로 제공**해 프레임워크가 이득. → 도구는 작업 성격에 맞춰 고른다.
 - **확장 포인트**: 추출 노드에 외부 도구(DB 조회·검색) tool-calling 추가, LangSmith로 관찰성, 멀티 문서 타입별 서브그래프.
 
 ## 기술 스택
-`LangGraph` · `LangChain` · `Pydantic` · `vLLM`/`Ollama` (로컬 LLM) · `Qwen3-30B-A3B`
+`LangGraph` · `LangChain` · `Pydantic` · `Ollama`/`vLLM` (로컬 LLM, OpenAI 호환) · `Qwen3` (검증: `qwen3:8b` on H100, 운영 권장: `Qwen3-30B-A3B`)

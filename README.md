@@ -71,12 +71,11 @@ vllm serve Qwen/Qwen3-30B-A3B \
   --max-model-len 16384 --gpu-memory-utilization 0.9
 # → OpenAI 호환 엔드포인트 http://localhost:8000/v1
 ```
-> ⚠️ 실전 함정: vLLM 최신 휠은 새 CUDA로 빌드된 torch를 끌고 온다. GPU 드라이버가
-> 그보다 낮으면(예: driver CUDA 12.4) 엔진 init 단계에서
-> `RuntimeError: The NVIDIA driver on your system is too old` 로 죽는다.
-> → 드라이버에 맞는 torch가 들어간 vLLM 버전을 고르거나, 아래 Ollama를 쓴다.
+> 주의: vLLM 최신 휠은 새 CUDA로 빌드된 torch를 끌고 온다. GPU 드라이버가 그보다 낮으면
+> (예: driver CUDA 12.4) 엔진 init 단계에서 `RuntimeError: The NVIDIA driver on your system
+> is too old` 로 죽는다. → 드라이버에 맞는 torch가 들어간 vLLM 버전을 고르거나 Ollama를 쓴다.
 
-**Ollama (마찰 0, 빠른 시작 — 이 데모 검증에 실제 사용):**
+**Ollama (빠른 시작 — 이 데모는 Ollama로 돌렸다):**
 ```bash
 ollama pull qwen3:8b    # 또는 qwen3:30b-a3b
 ollama serve            # http://localhost:11434/v1
@@ -113,7 +112,7 @@ DOC=다른문서.txt python agent.py
 
 ---
 
-## 4. 실제 검증 결과
+## 4. 검증 결과
 
 H100에 Ollama(`qwen3:8b`)를 띄워 end-to-end로 돌린 로그.
 
@@ -135,21 +134,16 @@ H100에 Ollama(`qwen3:8b`)를 띄워 end-to-end로 돌린 로그.
 ```
 `extract → validate → extract → validate → finalize` — DAG 체인은 못 하는 **되돌아가기**가 로그에 그대로 찍힌다.
 
-> **검증 중 잡은 실전 버그**: 모델이 누락 필드를 `null`이 아니라 `"not found"` *문자열*로
-> 채워, 단순 falsy 검사(`if not e.get(k)`)를 통과시켜 루프가 안 돌았다. → 검증 노드에
-> placeholder 문자열(`"not found"`, `"없음"` 등)을 누락으로 정규화하는 `_is_missing()`을 추가.
-> (구조화 추출 모델의 흔한 환각 — *모델 출력을 믿지 말고 경계에서 검증*.)
+> **버그 메모**: 모델이 누락 필드를 `null`이 아니라 `"not found"` 문자열로 채워, falsy 검사
+> (`if not e.get(k)`)를 통과시켜 루프가 안 돌았다. → 검증 노드에서 placeholder 문자열
+> (`"not found"`, `"없음"` 등)을 누락으로 정규화하는 `_is_missing()`을 추가.
 
 ---
 
 ## 5. 평가: RAGAS로 추출 품질 측정 (`eval/`)
 
-검증 로그가 "도는가"라면, 이건 "**얼마나 정확한가**"를 수치로 본다. 별도 RAG 프로젝트
-([graphrag](https://github.com/pascran/graphrag))에서는 RAGAS 스타일 지표를 직접 구현해
-원리를 익혔고, 여기서는 **RAGAS를 그대로 가져다** 에이전트 출력에 적용했다 — 도구를 한 번
-바닥부터 이해한 뒤 표준을 실무처럼 쓰는 흐름.
-
-추출 에이전트는 RAG가 아니므로 랭킹 지표(context precision/recall)는 빼고, 추출에 맞는 둘만:
+RAGAS로 추출 결과의 품질을 수치화한다. 추출 에이전트는 RAG가 아니므로 랭킹 지표
+(context precision/recall)는 빼고, 추출에 맞는 둘만 쓴다:
 - **Faithfulness** — 추출한 값이 원본 문서에 근거하는가 (= 환각 안 했는가)
 - **FactualCorrectness** — 추출 결과가 골든 정답과 사실적으로 일치하는가
 
@@ -160,11 +154,10 @@ H100에 Ollama(`qwen3:8b`)를 띄워 end-to-end로 돌린 로그.
 | doc-03 결함(공급자·날짜 없음) | **0.500** | 0.890 |
 | **평균** | **0.833** | **0.850** |
 
-> **읽은 것(정직)**: doc-03의 faithfulness가 0.5로 떨어진 건 에이전트 잘못이 아니라 **지표의
-> 성질**이다. "공급자는 명시되지 않음" 같은 *부재 진술*은 문서에 텍스트로 entailment되지 않아
-> faithfulness가 페널티를 준다 — 즉 **faithfulness는 '모름' 답변을 잘 보상하지 못한다**.
-> 추출/거절 과제에선 factual correctness(거절도 정답이면 일치) 쪽이 더 맞는 신호다.
-> N=3 합성셋·judge 1개라 정밀 벤치가 아니라 방향성 sanity check.
+> doc-03의 faithfulness가 0.5인 건 에이전트 오류가 아니라 지표 성질이다. "공급자는 명시되지
+> 않음" 같은 부재 진술은 문서에 entailment되지 않아 faithfulness가 깎인다 — faithfulness는
+> '모름' 답변을 잘 보상하지 못한다. 추출/거절 과제에선 factual correctness가 더 맞는 신호다.
+> N=3 합성셋·judge 1개라 정밀 벤치가 아니라 방향성 확인용이다.
 
 **2단계 디커플링**: RAGAS(0.4.x)가 아직 langchain 1.x와 비호환이라, 에이전트(`venv-agent`)는
 예측을 `predictions.json`으로 떨구고, RAGAS(`venv-ragas`, langchain 0.3 핀)는 그걸 읽어 평가한다 —
@@ -181,8 +174,7 @@ python eval/ragas_eval.py          # judge: qwen2.5:7b-instruct
 
 ## 6. 설계 노트
 
-- **왜 LangGraph인가** — 단순 추출이면 일반 체인으로 충분하다. 하지만 "검증 실패 시 추출로 되돌아가는" 흐름은 상태에 따라 경로가 갈리고 되돌아가는 **사이클**이라, 그래프/상태머신으로 짜는 게 자연스럽다.
-- **프레임워크 vs 직접 구현** — 모든 걸 프레임워크로 짤 필요는 없다. 검색 융합(RRF)·리랭킹처럼 세밀한 제어가 핵심인 부분은 직접 짜는 게 낫고, 상태·분기·관찰성이 반복되는 에이전트 워크플로는 프레임워크가 표준을 제공해 이득이다. 작업 성격에 맞춰 고른다.
+- **왜 LangGraph인가** — 단순 추출이면 일반 체인으로 충분하다. "검증 실패 시 추출로 되돌아가는" 흐름은 상태에 따라 경로가 갈리고 되돌아가는 사이클이라 그래프/상태머신으로 짜는 게 맞다.
 - **확장 포인트** — 추출 노드에 외부 도구(DB 조회·검색) tool-calling, LangSmith 관찰성, 문서 타입별 서브그래프.
 
 ## 기술 스택

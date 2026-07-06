@@ -1,0 +1,26 @@
+name: eval
+on: [push, pull_request]
+jobs:
+  harness:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: 유닛테스트 (LLM 불필요, 결정론)
+        run: python3 tests/test_eval.py
+      - name: 골든 자기정합 검증
+        run: |
+          python3 - <<'PY'
+          import json, sys
+          sys.path.insert(0, 'eval'); import score as S, diagnose as D
+          for dom in ['qc_report', 'receipt']:
+              g = json.load(open(f'eval/golden/{dom}.json', encoding='utf-8'))
+              p = [{'id': it['id'], 'category': it['category'], 'extracted': dict(it['gold'])} for it in g['items']]
+              assert D.diagnose_all(g, p)['total_failures'] == 0
+              assert S.score_all(g, p)['metrics']['exact_match'] == 1.0
+          print('golden self-consistent')
+          PY
+      - name: 회귀 게이트 (데모 예측 vs baseline)
+        run: python3 -m eval.gate --domain qc_report --pred eval/predictions_qc_report.demo.json

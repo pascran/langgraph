@@ -53,8 +53,9 @@
 ```
 
 - **노드**: `classify` → `extract` → `validate` → (`extract` 루프 | `finalize`)
-- **조건 분기**(`route_after_validate`): 검증 실패 + 재시도 여유 → `extract`로 되돌아감, 아니면 `finalize`
-- **구조화 출력**: `llm.with_structured_output(Invoice)` — Pydantic 스키마로 강제
+- **조건 분기**(`route`): 검증 실패 + 재시도 여유 → `extract`로 되돌아감, 아니면 `finalize`
+- **구조화 출력**: `llm.with_structured_output(도메인 스키마)` — Pydantic 스키마로 강제
+- **도메인-주입**: `build_app(domain)` — 스키마·필수필드·업무규칙을 갈아끼움(영수증 · QC 성적서). `validate`는 필수필드 + 업무규칙(예: QC 판정 = 측정값 vs 규격)을 검사한다.
 - **백엔드 독립**: `base_url`만 바꾸면 vLLM/Ollama/상용 API 무엇이든
 
 ---
@@ -72,8 +73,10 @@ vllm serve Qwen/Qwen3-30B-A3B \
 # → OpenAI 호환 엔드포인트 http://localhost:8000/v1
 ```
 > 주의: vLLM 최신 휠은 새 CUDA로 빌드된 torch를 끌고 온다. GPU 드라이버가 그보다 낮으면
-> (예: driver CUDA 12.4) 엔진 init 단계에서 `RuntimeError: The NVIDIA driver on your system
-> is too old` 로 죽는다. → 드라이버에 맞는 torch가 들어간 vLLM 버전을 고르거나 Ollama를 쓴다.
+> (예: driver 550.144 = CUDA 12.4 상한) 엔진 init에서 `RuntimeError: The NVIDIA driver on your
+> system is too old` 로 죽는다. → **드라이버에 맞는 torch가 든 vLLM으로 핀**해야 한다.
+> 이 레포는 `serve/`에 그 셋업을 스크립트로 둔다(vLLM 0.8.5 = torch 2.6.0+**cu124**):
+> `bash serve/setup_vllm.sh && bash serve/serve_vllm.sh` (H100, `Qwen3-30B-A3B` TP=2). 자세히는 `serve/README.md`.
 
 **Ollama (빠른 시작 — 이 데모는 Ollama로 돌렸다):**
 ```bash
@@ -172,7 +175,34 @@ python eval/ragas_eval.py          # judge: qwen2.5:7b-instruct
 
 ---
 
-## 6. 설계 노트
+## 6. 실패 진단 평가 하네스 (`eval/`, schema-driven)
+
+RAGAS(§5)가 LLM-judge 기반 시맨틱 점수라면, 이쪽은 **결정론 채점 + 실패 원인 분해**다.
+추출이 틀렸을 때 "얼마나 틀렸나"가 아니라 **"어디서·왜 틀렸나"** 를 분류한다.
+
+- **도메인-무관**: `domains/`의 스키마·필수필드·업무규칙 + `eval/golden/*.json`만 갈아끼우면 새 도메인에 붙는다. 현재 영수증(baseline) + **MES 품질검사 성적서** 2도메인.
+- **결정론 채점**(`score.py`): 필드별 정규화 비교(날짜·수치+단위·set-F1). exact-match · field accuracy · **abstention 정확도**(결함 필드에서 올바로 null 냈나).
+- **실패유형 분류**(`diagnose.py`): 오답마다 규칙으로 태깅 — `missing`(주의) · `hallucinated`(과생성) · `wrong_value`(추출오류) · `format`(스키마) · `ambiguous`(데이터 모호) · **`rule_violation`**(업무기준: 판정 ≠ 측정값 vs 규격).
+- **리포트**(`report.py`): 실패유형 분포를 헤드라인으로 — "실패 X건 중 format 40%·rule_violation 25%…" → 프롬프트를 고칠지, 출력 스키마를 고칠지, 업무규칙을 고칠지 지목.
+- **회귀 게이트**(`gate.py`): baseline 대비 품질 하락/특정 실패유형 급증 시 CI 차단.
+- **A/B**(`run.py` + `configs/`): 모델·재시도·프롬프트 변형별 지표·실패유형 델타.
+
+채점·분류는 규칙 기반이라 재현 가능하다(LLM 없이 검증). 실패유형 분류가 실측 위에서 어떻게
+나오는지는 `eval/results_qc_report.demo.md`(합성 오류 주입) 참고.
+
+```bash
+# 결정론 코어 검증 (LLM 불필요)
+python3 tests/test_eval.py
+
+# 실측 (LLM 서빙 필요): 실행 → 리포트 → 게이트
+python -m eval.run    --domain qc_report --config eval/configs/baseline.yaml
+python -m eval.report --domain qc_report --pred eval/predictions_qc_report.json --model Qwen3-30B-A3B
+python -m eval.gate   --domain qc_report --pred eval/predictions_qc_report.json
+```
+
+---
+
+## 7. 설계 노트
 
 - **왜 LangGraph인가** — 단순 추출이면 일반 체인으로 충분하다. "검증 실패 시 추출로 되돌아가는" 흐름은 상태에 따라 경로가 갈리고 되돌아가는 사이클이라 그래프/상태머신으로 짜는 게 맞다.
 - **확장 포인트** — 추출 노드에 외부 도구(DB 조회·검색) tool-calling, LangSmith 관찰성, 문서 타입별 서브그래프.

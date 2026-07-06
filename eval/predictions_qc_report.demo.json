@@ -1,0 +1,184 @@
+[
+  {
+    "id": "qc-01",
+    "category": "정상-합격",
+    "extracted": {
+      "part_no": "MX-1201",
+      "lot_no": "L260701-03",
+      "inspect_date": "2026.07.01",
+      "item": "외경",
+      "spec": "10.00±0.20 mm",
+      "measured": "10.05 mm",
+      "judgment": "합격",
+      "inspector": "김철수"
+    }
+  },
+  {
+    "id": "qc-02",
+    "category": "정상-불합격",
+    "extracted": {
+      "part_no": "MX-1202",
+      "lot_no": "L260701-07",
+      "inspect_date": "2026-07-01",
+      "item": "두께",
+      "spec": "3.00±0.05 mm",
+      "measured": "3.12 mm",
+      "judgment": "합격",
+      "inspector": "이영희"
+    }
+  },
+  {
+    "id": "qc-03",
+    "category": "범위표기-합격",
+    "extracted": {
+      "part_no": "HR-330",
+      "lot_no": "L260628-11",
+      "inspect_date": "2026-06-28",
+      "item": "경도",
+      "spec": "45~55 HRC",
+      "measured": "52 HRC",
+      "judgment": "합격",
+      "inspector": "박민수"
+    }
+  },
+  {
+    "id": "qc-04",
+    "category": "최소기준(이상)-불합격",
+    "extracted": {
+      "part_no": "TS-088",
+      "lot_no": "L260702-01",
+      "inspect_date": "2026-07-02",
+      "item": "인장강도",
+      "spec": "≥ 400 MPa",
+      "measured": "385 MPa",
+      "judgment": "불합격",
+      "inspector": "정한울"
+    }
+  },
+  {
+    "id": "qc-05",
+    "category": "날짜포맷변형",
+    "extracted": {
+      "part_no": "MX-1240",
+      "lot_no": "L260630-22",
+      "inspect_date": "2026.06.30",
+      "item": "내경",
+      "spec": "8.00±0.10 mm",
+      "measured": "7.96 mm",
+      "judgment": "합격",
+      "inspector": "김철수"
+    }
+  },
+  {
+    "id": "qc-06",
+    "category": "결함-로트누락",
+    "extracted": {
+      "part_no": "MX-1255",
+      "lot_no": "L260703-99",
+      "inspect_date": "2026-07-03",
+      "item": "외경",
+      "spec": "12.00±0.15 mm",
+      "measured": "12.02 mm",
+      "judgment": "합격",
+      "inspector": "이영희"
+    }
+  },
+  {
+    "id": "qc-07",
+    "category": "결함-검사자누락",
+    "extracted": {
+      "part_no": "HR-402",
+      "lot_no": "L260703-05",
+      "inspect_date": "2026-07-03",
+      "item": "경도",
+      "spec": "50~60 HRC",
+      "measured": "58 HRC",
+      "judgment": "합격",
+      "inspector": null
+    }
+  },
+  {
+    "id": "qc-08",
+    "category": "환각미끼-수치혼재",
+    "extracted": {
+      "part_no": "MX-1260",
+      "lot_no": "L260704-09",
+      "inspect_date": "2026-07-04",
+      "item": "외경",
+      "spec": "15.00±0.25 mm",
+      "measured": "50",
+      "judgment": "합격",
+      "inspector": "박민수"
+    }
+  },
+  {
+    "id": "qc-09",
+    "category": "판정생략-규칙유도",
+    "extracted": {
+      "part_no": "MX-1272",
+      "lot_no": "L260705-02",
+      "inspect_date": "2026-07-05",
+      "item": "폭",
+      "spec": "5.00±0.10 mm",
+      "measured": "5.03 mm",
+      "judgment": "합격",
+      "inspector": "정한울"
+    }
+  },
+  {
+    "id": "qc-10",
+    "category": "공차모호",
+    "extracted": {
+      "part_no": "MX-1288",
+      "lot_no": "L260705-14",
+      "inspect_date": "2026-07-05",
+      "item": "길이",
+      "spec": "20mm",
+      "measured": "21.5 mm",
+      "judgment": "합격",
+      "inspector": "김철수"
+    }
+  },
+  {
+    "id": "qc-11",
+    "category": "노이즈문서",
+    "extracted": {
+      "part_no": null,
+      "lot_no": "L260708-03",
+      "inspect_date": "2026-07-08",
+      "item": "인장강도",
+      "spec": "≥ 450 MPa",
+      "measured": "472 MPa",
+      "judgment": "합격",
+      "inspector": "이영희"
+    }
+  },
+  {
+    "id": "qc-12",
+    "category": "최대기준(이하)-합격",
+    "extracted": {
+      "part_no": "SF-011",
+      "lot_no": "L260708-20",
+      "inspect_date": "2026-07-08",
+      "item": "표면조도",
+      "spec": "≤ 1.0 μm",
+      "measured": "0.85 μm",
+      "judgment": "합격",
+      "inspector": "박민수"
+    }
+  },
+  {
+    "id": "qc-13",
+    "category": "범위초과-불합격",
+    "extracted": {
+      "part_no": "MX-1301",
+      "lot_no": "L260709-06",
+      "inspect_date": "2026-07-09",
+      "item": "평면도",
+      "spec": "0~0.05 mm",
+      "measured": "0.08 mm",
+      "judgment": "불합격",
+      "inspector": "김철수"
+    }
+  }
+]

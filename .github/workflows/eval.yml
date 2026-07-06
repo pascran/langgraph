@@ -22,5 +22,5 @@ jobs:
               assert S.score_all(g, p)['metrics']['exact_match'] == 1.0
           print('golden self-consistent')
           PY
-      - name: 회귀 게이트 (데모 예측 vs baseline)
-        run: python3 -m eval.gate --domain qc_report --pred eval/predictions_qc_report.demo.json
+      - name: 회귀 게이트 (데모 예측 vs 데모 baseline, LLM-free)
+        run: python3 -m eval.gate --domain qc_report --pred eval/predictions_qc_report.demo.json --baseline eval/baselines/qc_report.demo.baseline.json

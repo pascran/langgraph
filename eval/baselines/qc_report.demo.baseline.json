@@ -1,0 +1,12 @@
+{
+  "exact_match": 0.6154,
+  "field_accuracy": 0.9327,
+  "distribution": {
+    "missing": 1,
+    "hallucinated": 1,
+    "wrong_value": 1,
+    "format": 2,
+    "ambiguous": 1,
+    "rule_violation": 1
+  }
+}

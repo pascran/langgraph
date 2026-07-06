@@ -187,8 +187,16 @@ RAGAS(§5)가 LLM-judge 기반 시맨틱 점수라면, 이쪽은 **결정론 채
 - **회귀 게이트**(`gate.py`): baseline 대비 품질 하락/특정 실패유형 급증 시 CI 차단.
 - **A/B**(`run.py` + `configs/`): 모델·재시도·프롬프트 변형별 지표·실패유형 델타.
 
-채점·분류는 규칙 기반이라 재현 가능하다(LLM 없이 검증). 실패유형 분류가 실측 위에서 어떻게
-나오는지는 `eval/results_qc_report.demo.md`(합성 오류 주입) 참고.
+채점·분류는 규칙 기반이라 재현 가능하다(LLM 없이 검증).
+
+**실측(qwen3:8b, H100 Ollama):**
+- QC 성적서(13건): exact-match 1.0 · field 1.0 · abstention 1.0 · 실패 0 — 누락 필드 abstention과 판정 규칙까지 통과(`eval/results_qc_report.md`).
+- 영수증(6건): exact-match 1.0 · field 0.79 · 실패 5건 전부 `items`의 **과다추출**(수량·가격을 함께 뽑음) → `wrong_value`로 분류(`eval/results_receipt.md`).
+- 실패유형이 주입 오류에서 어떻게 갈리는지는 `eval/results_qc_report.demo.md`(합성) 참고.
+
+> 서빙 노트: 원래 vLLM(§3)으로 Qwen3-30B-A3B를 서빙하려 했으나, 이 H100 드라이버(CUDA 12.4 상한)에서
+> 쓸 수 있는 vLLM 0.8.5가 Qwen3 토크나이저와 충돌해(새 vLLM은 CUDA 12.8+ 요구) 실측은 Ollama로 돌렸다.
+> 에이전트는 백엔드 독립이라 `LLM_BASE_URL`만 바꾸면 된다.
 
 ```bash
 # 결정론 코어 검증 (LLM 불필요)

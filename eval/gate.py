@@ -40,12 +40,13 @@ if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("--domain", required=True)
     ap.add_argument("--pred", required=True)
+    ap.add_argument("--baseline", default=None, help="기본: baselines/{domain}.baseline.json")
     ap.add_argument("--update", action="store_true")
     a = ap.parse_args()
     golden = json.loads((EVAL_DIR / "golden" / f"{a.domain}.json").read_text(encoding="utf-8"))
     preds = json.loads(Path(a.pred).read_text(encoding="utf-8"))
     cur = current(golden, preds)
-    bpath = EVAL_DIR / "baselines" / f"{a.domain}.baseline.json"
+    bpath = Path(a.baseline) if a.baseline else EVAL_DIR / "baselines" / f"{a.domain}.baseline.json"
 
     if a.update or not bpath.exists():
         bpath.write_text(json.dumps(cur, ensure_ascii=False, indent=2), encoding="utf-8")

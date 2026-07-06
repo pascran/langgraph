@@ -1,10 +1,10 @@
 {
   "exact_match": 1.0,
-  "field_accuracy": 1.0,
+  "field_accuracy": 0.7917,
   "distribution": {
     "missing": 0,
     "hallucinated": 0,
-    "wrong_value": 0,
+    "wrong_value": 5,
     "format": 0,
     "ambiguous": 0,
     "rule_violation": 0

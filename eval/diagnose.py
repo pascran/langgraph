@@ -14,7 +14,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from _norm import (  # noqa: E402
-    is_missing, canonical_equal, value_equal, value_in_doc, norm_text, derive_judgment,
+    is_missing, canonical_equal, value_equal, value_in_doc, norm_text, derive_judgment, set_f1,
 )
 
 TAXONOMY = ["missing", "hallucinated", "wrong_value", "format", "ambiguous", "rule_violation"]
@@ -38,6 +38,12 @@ def classify_field(fspec, pred_ex, gold, meta, doc):
             return "rule_violation"
     if ftype in ("date", "number", "measure"):
         return "format" if value_equal(p, g, ftype) else "wrong_value"
+    if ftype == "list":
+        # gold 품목이 pred에 포함(과다추출 등)되면 wrong_value, 전혀 없으면 hallucinated
+        pjoined = " | ".join(norm_text(x) for x in (p or []))
+        overlap = any(norm_text(x) and norm_text(x) in pjoined for x in (g or []))
+        overlap = overlap or set_f1(p, g) > 0
+        return "wrong_value" if overlap else "hallucinated"
     return "wrong_value" if value_in_doc(p, doc) else "hallucinated"
 
 

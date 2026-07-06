@@ -72,11 +72,8 @@ vllm serve Qwen/Qwen3-30B-A3B \
   --max-model-len 16384 --gpu-memory-utilization 0.9
 # → OpenAI 호환 엔드포인트 http://localhost:8000/v1
 ```
-> 주의: vLLM 최신 휠은 새 CUDA로 빌드된 torch를 끌고 온다. GPU 드라이버가 그보다 낮으면
-> (예: driver 550.144 = CUDA 12.4 상한) 엔진 init에서 `RuntimeError: The NVIDIA driver on your
-> system is too old` 로 죽는다. → **드라이버에 맞는 torch가 든 vLLM으로 핀**해야 한다.
-> 이 레포는 `serve/`에 그 셋업을 스크립트로 둔다(vLLM 0.8.5 = torch 2.6.0+**cu124**):
-> `bash serve/setup_vllm.sh && bash serve/serve_vllm.sh` (H100, `Qwen3-30B-A3B` TP=2). 자세히는 `serve/README.md`.
+> 주의: vLLM은 GPU 드라이버의 CUDA 버전과 휠이 맞아야 한다(드라이버가 낮으면 최신 휠이 init에서 실패).
+> 드라이버에 맞는 vLLM으로 핀할 것. 로컬 개발·검증은 Ollama가 간편하다.
 
 **Ollama (빠른 시작 — 이 데모는 Ollama로 돌렸다):**
 ```bash
@@ -194,9 +191,7 @@ RAGAS(§5)가 LLM-judge 기반 시맨틱 점수라면, 이쪽은 **결정론 채
 - 영수증(6건): exact-match 1.0 · field 0.79 · 실패 5건 전부 `items`의 **과다추출**(수량·가격을 함께 뽑음) → `wrong_value`로 분류(`eval/results_receipt.md`).
 - 실패유형이 주입 오류에서 어떻게 갈리는지는 `eval/results_qc_report.demo.md`(합성) 참고.
 
-> 서빙 노트: 원래 vLLM(§3)으로 Qwen3-30B-A3B를 서빙하려 했으나, 이 H100 드라이버(CUDA 12.4 상한)에서
-> 쓸 수 있는 vLLM 0.8.5가 Qwen3 토크나이저와 충돌해(새 vLLM은 CUDA 12.8+ 요구) 실측은 Ollama로 돌렸다.
-> 에이전트는 백엔드 독립이라 `LLM_BASE_URL`만 바꾸면 된다.
+실측은 로컬 Ollama(`qwen3:8b`)로 돌렸다. 에이전트는 백엔드 독립이라 `LLM_BASE_URL`만 바꾸면 vLLM/상용 API로 교체된다.
 
 ```bash
 # 결정론 코어 검증 (LLM 불필요)

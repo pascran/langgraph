@@ -73,6 +73,14 @@ python -m eval.report --domain qc_report --pred eval/predictions_qc_report.json 
 python -m eval.gate   --domain qc_report --pred eval/predictions_qc_report.json
 ```
 
+평가 run은 **MLflow**로 추적한다(`eval/track.py`) — 학습이 아니라 **평가** 추적이다. config별 지표(exact-match·field·abstention·**실패유형별 count**)를 run으로 로깅해, A/B(baseline↔no_retry↔small_model)와 회귀를 대시보드로 비교한다. 채점·진단은 하네스가, 저장·비교·시각화는 MLflow가 맡는 구성.
+
+```bash
+python -m eval.track --domain qc_report --pred eval/predictions_qc_report.json \
+    --model qwen3:8b --config eval/configs/small_model.yaml
+mlflow ui --backend-store-uri sqlite:///mlflow.db     # → run 비교·지표 추세 (localhost:5000)
+```
+
 RAGAS 기반 시맨틱 지표(faithfulness / factual correctness)는 `eval/ragas_eval.py`에 따로 있다(langchain 버전 충돌 때문에 venv 분리).
 
 ## 스택

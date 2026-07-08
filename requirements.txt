@@ -4,3 +4,4 @@ langchain-openai>=0.2
 pydantic>=2.9
 pyyaml>=6
 mlflow>=2.12
+langfuse>=3

@@ -81,8 +81,22 @@ python -m eval.track --domain qc_report --pred eval/predictions_qc_report.json \
 mlflow ui --backend-store-uri sqlite:///mlflow.db     # → run 비교·지표 추세 (localhost:5000)
 ```
 
+MLflow가 config 단위 A/B라면, 개별 문서·노드 단위 추적은 **Langfuse**로 한다(`eval/run_traced.py`). 문서 1건 = 트레이스 1개, LangGraph 내부 노드(classify·extract·validate·재시도)가 span으로 중첩 기록된다. 추출 직후 그 문서를 하네스로 채점·진단해 트레이스에 score를 붙인다 — `exact_match`·`field_accuracy`·`abstention`·`retries`(수치), 그리고 틀린 필드마다 `fail:<field> = <실패유형>`(범주). Langfuse UI에서 "어느 문서가 어느 노드에서 왜 틀렸나"를 호출 단위로 필터·조회한다. MLflow(run 단위)와 Langfuse(call 단위)는 상보적이다.
+
+Langfuse는 OSS self-host라 폐쇄망에서 쓴다(Docker: postgres·clickhouse·redis·minio·web·worker, `localhost:3000`). SaaS를 못 쓰는 납품 환경 기준.
+
+```bash
+# Langfuse self-host 기동 후 (키는 self-host 프로젝트에서 발급)
+export LANGFUSE_HOST=http://localhost:3000
+export LANGFUSE_PUBLIC_KEY=...  LANGFUSE_SECRET_KEY=...
+python -m eval.run_traced --domain qc_report --config eval/configs/o_ollama_qwen25.yaml
+python -m eval.run_traced --domain receipt   --config ... --limit 3   # CPU 추론시 건수 제한
+```
+
+실측(qwen2.5:3b, WSL Ollama CPU): QC 성적서 13건 → 21개 필드 실패를 taxonomy로 분해해 트레이스에 첨부(`missing` 3 · `hallucinated` 3 · `rule_violation` 1 등). 결함 주입 문서(part_no 누락·판정 규격위반)는 `validate`가 잡아 재시도 2회까지 도는 사이클이 트레이스에 그대로 남는다.
+
 RAGAS 기반 시맨틱 지표(faithfulness / factual correctness)는 `eval/ragas_eval.py`에 따로 있다(langchain 버전 충돌 때문에 venv 분리).
 
 ## 스택
 
-LangGraph, LangChain, Pydantic, Ollama/vLLM(OpenAI 호환), Qwen3.
+LangGraph, LangChain, Pydantic, Ollama/vLLM(OpenAI 호환), Qwen. 평가 관측: MLflow(run 단위) + Langfuse(call 단위, self-host).

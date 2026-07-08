@@ -1,0 +1,6 @@
+# 로컬 폐쇄망 백엔드: WSL Ollama (CPU 추론, qwen2.5:3b)
+# GPU는 드라이버 546 < 필요 550 이라 CPU 폴백. 트레이싱 데모엔 충분.
+LLM_BASE_URL: http://localhost:11434/v1
+LLM_MODEL: qwen2.5:3b
+LLM_API_KEY: ollama
+max_retries: 2

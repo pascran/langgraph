@@ -58,10 +58,12 @@ START → route ──(잡담)── direct ── END
 | L2 +small-to-big | 0.902 | 0.838 | 0.758 |
 | L3 +리랭커 | 0.943 | 0.847 | 0.737 |
 | L4 +에이전틱 | 0.927 | 0.906 | 0.701 |
+| L2b +구조화 표(small-to-big) | 0.812 | 0.925 | 0.799 |
 
 - small-to-big이 answer_correctness 기여 최대(0.636→0.758).
 - 리랭커는 context_recall을 최고(0.943)로 올리나 answer_correctness로 전환되지 않음(0.758→0.737).
 - 에이전틱(CRAG/Self-RAG)은 faithfulness 최고(0.906), answer_correctness는 감소(신중성·거부 증가).
+- 표·수치 정밀추출 개선: 부모 문맥에서 표 HTML 구조를 보존하면 answer_correctness 0.758→0.799(최고), faithfulness 0.838→0.925 상승. context_recall은 HTML 장황함으로 0.902→0.812 감소(구조·예산 트레이드오프).
 - Failure localization(L4): 검색실패 1, 생성환각 1, 표·수치 정밀추출 9(context_recall=1·faithfulness=1인데 answer_correctness 낮음). 잔여 실패는 검색·환각이 아닌 표 수치 추출 문제이며 리랭커·에이전틱으로 해소되지 않음.
 
 ## 청킹 결함 사례 — 면책 항목 유실

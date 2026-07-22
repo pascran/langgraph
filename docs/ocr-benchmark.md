@@ -31,6 +31,21 @@
 ## 다음 단계(벤치→우리 코퍼스 검증)
 영어·중국어 리더보드를 맹신하지 말고, **후보(PaddleOCR-VL)를 우리 표 페이지 2~3장에 로컬 실행 → Unlimited-OCR 대비 TEDS를 실측**해 전이 여부를 확인한 뒤 전면 교체.
 
+## 실측 bake-off — 우리 한국어 표 (p21/p23)
+영어·중국어 벤치를 맹신하지 않고 후보를 우리 실제 표(통원 공제금액, 병합셀·계층구조)에 직접 실행. transformers-direct(NVIDIA 컨테이너, GB10 conv2d는 cudnn.enabled=False로 우회).
+
+| 모델 | 표 구조 | 숫자(의원1만/병원1.5만/상급2만/약제8천) | 한국어 글자 | 판정 |
+|---|---|---|---|---|
+| **Chandra v2** (8B, Qwen3-VL) | rowspan/colspan 정확 | 4/4 정확 | 깨끗 | **최고** |
+| Unlimited-OCR (3.3B, 현재) | 양호 | 4/4 정확 | 깨끗 | 양호 |
+| GLM-OCR (0.9B) | 정확 | 4/4 정확 | 오류 심함(의료→의로, 병원→복원, 상급종합병원→상금중합법원) | 한국어 열세 |
+| PaddleOCR-VL (0.9B) | — | — | — | 런타임 실패(transformers 5.14 paddleocr_vl config 버그) |
+
+핵심:
+- **영/중 벤치 1위 GLM-OCR이 한국어에선 최악** — 벤치 순위가 한국어로 전이되지 않음(사전 경고 실증).
+- **Chandra v2(Qwen3-VL 백본)가 한국어 표 최고** — 백본 언어 커버리지가 벤치 순위보다 결정적. Chandra는 레이아웃 라벨(bbox+element type)까지 출력.
+- 채택: **Chandra v2**로 전면 재-OCR 후 파이프라인 재실행 예정.
+
 ## 한계
 벤치마크 포화·벤더 자기보고(PaddleOCR-VL-1.6 96.33 등은 미검증 prior)·third-party 재현 부재 등 주의. 단일 aggregate 점수는 프로덕션 실패 케이스를 가림.
 

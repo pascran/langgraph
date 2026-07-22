@@ -80,6 +80,25 @@ MemorySaver 체크포인터. LLM 노드는 Qwen3-8B(:8001).
 .venv-rag/bin/python rag/graph/agentic_rag.py    # LangGraph 에이전틱 RAG
 ```
 
+## RAGAS 답변품질 — Ablation ladder (골든셋 32문항)
+| 단계 | context_recall(검색) | faithfulness(근거) | answer_correctness(정답) |
+|---|---|---|---|
+| L0 dense | 0.694 | 0.847 | 0.636 |
+| L1 +하이브리드 | 0.743 | 0.859 | 0.716 |
+| L2 +small-to-big | 0.902 | 0.838 | **0.758** |
+| L3 +리랭커 | **0.943** | 0.847 | 0.737 |
+| L4 +에이전틱 | 0.927 | **0.906** | 0.701 |
+
+**정직한 결론:**
+- **small-to-big = 답변품질 최대 레버** (ac 0.636→0.758, cr +0.16).
+- **리랭커: 검색 올리나(cr 0.943 최고) 답변엔 전환 안 됨(ac −0.02)** = "검색 승리 ≠ 답변 승리"의 실측.
+- **에이전틱: faithfulness 최고(0.906, 환각 최소)지만 correctness는 trade** (신중·거부↑).
+
+**Failure localization** (L4): 검색실패 1 · 생성환각 1 · **표/수치정밀 9**(cr=1·f=1인데 ac 낮음).
+→ 남은 실패는 검색/환각이 아니라 **표·수치 정밀추출**(선택형 공제금액 등). 리랭커·에이전틱으로 안 고쳐짐 → 표 특화/수치검증/강한 모델이 다음.
+
+> 심판=로컬 Qwen3-8B(노이즈 有, answer_correctness는 표현 민감). RAGAS 라이브러리는 로컬 vLLM에 순차호출(1 concurrent)로 ~60분 → **RAGAS 지표 정의(faithfulness/context_recall/answer_correctness=0.75·F1+0.25·유사도)를 스레드 병렬로 직접 구현**.
+
 ## 이월
 - **RAGAS 답변품질 정량화** — 컴포넌트 ablation(naive→+hybrid→+rerank→+small-to-big→+agentic) × failure-localization(context_recall vs faithfulness)
 - 라우터 tool 경로, transform 다양화 고도화

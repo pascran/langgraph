@@ -1,9 +1,20 @@
-.venv*/
-.hf/
-qdrant_db/
+# --- 하네스(원본) ---
+venv/
+.venv/
+venv-vllm/
+venv-agent/
 __pycache__/
 *.pyc
+.env
 *.log
+mlruns/
+mlartifacts/
+mlflow.db
+# --- rag 서브프로젝트 ---
+.venv-rag/
+.venv-ocr/
+.hf/
+qdrant_db/
 data/ocr/
 data/ocr_out/
 data/*.pdf

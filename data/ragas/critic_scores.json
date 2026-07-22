@@ -1,0 +1,27 @@
+{
+ "L0": {
+  "context_recall": 0.861,
+  "faithfulness": 0.812,
+  "answer_correctness": 0.609
+ },
+ "L1": {
+  "context_recall": 1.001,
+  "faithfulness": 0.87,
+  "answer_correctness": 0.661
+ },
+ "L2": {
+  "context_recall": 0.972,
+  "faithfulness": 0.898,
+  "answer_correctness": 0.67
+ },
+ "L3": {
+  "context_recall": 0.953,
+  "faithfulness": 0.747,
+  "answer_correctness": 0.699
+ },
+ "L4": {
+  "context_recall": 0.972,
+  "faithfulness": 0.875,
+  "answer_correctness": 0.687
+ }
+}

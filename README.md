@@ -80,10 +80,25 @@ START → route ──(잡담)── direct ── END
 | L2c +markdown 표 | 0.938 | 0.831 | 0.780 |
 
 - small-to-big이 answer_correctness 기여 최대(0.636→0.758).
-- 리랭커는 context_recall을 최고(0.943)로 올리나 answer_correctness로 전환되지 않음(0.758→0.737).
+- 리랭커는 context_recall을 최고(0.943)로 올림. answer_correctness 전환 여부는 심판 의존적 — 8B 심판에선 하락(0.758→0.737)이나 32B 심판 재채점에선 상승(0.670→0.699). 아래 심판 검증 참조.
 - 에이전틱(CRAG/Self-RAG)은 faithfulness 최고(0.906), answer_correctness는 감소(신중성·거부 증가).
 - 표·수치 정밀추출 개선: 부모 문맥에서 표 HTML 구조를 보존하면 answer_correctness 0.758→0.799(최고), faithfulness 0.838→0.925 상승. context_recall은 HTML 장황함으로 0.902→0.812 감소(구조·예산 트레이드오프). 표를 markdown으로 압축(L2c)하면 context_recall 0.938(최고)로 회복하며 표 정확도 0.853 유지 — 균형 최적.
 - Failure localization(L4): 검색실패 1, 생성환각 1, 표·수치 정밀추출 9(context_recall=1·faithfulness=1인데 answer_correctness 낮음). 잔여 실패는 검색·환각이 아닌 표 수치 추출 문제이며 리랭커·에이전틱으로 해소되지 않음.
+
+## 심판 모델 검증 — 8B vs 32B
+answer_correctness의 로컬 8B 심판 노이즈를 검증하기 위해, 동일 생성 답변을 Qwen3-32B-AWQ 심판(별도 vLLM 인스턴스)으로 재채점했다.
+
+| 단계 | ac(8B) | ac(32B) | cr(8B) | cr(32B) |
+|---|---|---|---|---|
+| L0 dense | 0.636 | 0.609 | 0.694 | 0.861 |
+| L1 +하이브리드 | 0.716 | 0.661 | 0.743 | 1.00 |
+| L2 +small-to-big | 0.758 | 0.670 | 0.902 | 0.972 |
+| L3 +리랭커 | 0.737 | 0.699 | 0.943 | 0.953 |
+| L4 +에이전틱 | 0.701 | 0.687 | 0.927 | 0.972 |
+
+- 심판이 바뀌면 결론이 바뀐다: 8B 심판은 answer_correctness가 L2에서 정점 후 리랭커·에이전틱에서 하락한다고 봤으나, 32B 심판에선 리랭커(L3)에서 상승(0.670→0.699). "리랭커가 답변으로 전환되지 않는다"는 8B 결론은 로버스트하지 않음.
+- 로버스트한 신호: 두 심판 모두 전체 스택(L3/L4)이 naive(L0)보다 context_recall·answer_correctness 모두 우세. 개별 컴포넌트의 answer_correctness 기여 순위는 심판에 민감.
+- 심판 편향: 8B는 answer_correctness를 후하게(L2 0.758 vs 32B 0.670), 32B는 context_recall을 후하게 매김. 소규모 로컬 심판의 절대값·순위는 신뢰구간이 넓다.
 
 ## 청킹 결함 사례 — 면책 항목 유실
 비만(E66) 면책 규정 질의에서 드러난 4단계 결함과 수정:
@@ -109,4 +124,4 @@ START → route ──(잡담)── direct ── END
 ## 측정 환경 및 한계
 - 인덱싱: 벡터 193개 규모에서 Qdrant가 exact search로 폴백, ef_search 튜닝 효과 없음(recall@10 전 구간 1.0). payload 인덱스(dambo/btype/pages)로 담보종목·표·페이지 스코프 필터검색 제공.
 - RAGAS 라이브러리는 로컬 vLLM에 대해 순차 호출(동시 1)로 비실용적(~60분). 지표 정의(faithfulness, context_recall, answer_correctness=0.75·F1+0.25·의미유사도)를 스레드 병렬로 직접 구현.
-- 심판 모델이 로컬 Qwen3-8B로 answer_correctness에 노이즈. 표·수치 정밀추출 미해결.
+- 심판 검증: 8B 심판의 결론 일부(리랭커·에이전틱의 answer_correctness 영향)가 32B 심판 재채점에서 뒤집힘 — 컴포넌트 단위 답변정확도 결론은 심판 의존적. 표·수치 정밀추출 미해결.

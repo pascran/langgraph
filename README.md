@@ -36,6 +36,24 @@ START → route ──(잡담)── direct ── END
 ```
 2-way LLM 라우터, CRAG 재검색 루프, small-to-big 생성, Self-RAG 근거검증. 조건부 엣지 + MemorySaver 체크포인터.
 
+## 검색 스택
+단일 모델·단일 컬렉션으로 dense+sparse 하이브리드를 구성하고, 각 요소의 기여를 골든셋으로 측정했다.
+
+**임베딩 — BGE-M3 (단일 모델, 다중 표현)**
+- 한 모델이 dense(의미, 1024차원)와 sparse(어휘 가중치)를 동시 생성 — 별도 SPLADE/BM25 파이프라인 없이 하이브리드 구성.
+- sparse 표현이 조항 번호·담보종목명·금액 등 정확 일치 토큰을 포착하여 dense 단독이 놓치는 법률·수치 텍스트를 보완.
+- 다국어·롱컨텍스트 임베딩으로 한국어 약관 용어 처리.
+
+**하이브리드 검색 — Qdrant named vectors + 서버측 RRF**
+- 한 컬렉션의 각 포인트가 dense·sparse 두 벡터를 함께 보유(named vectors) — 인덱스 이중화 없음.
+- 질의 시 dense top-30 + sparse top-30을 서버측 Reciprocal Rank Fusion으로 융합(FusionQuery) — 클라이언트 병합·점수 정규화 불필요.
+- payload 인덱스(dambo/btype/pages)로 담보종목·표·페이지 구간 스코프 필터검색(filterable HNSW). HNSW의 ef_search·exact 폴백 특성까지 검증.
+
+**리랭킹 — BGE-reranker-v2-m3 (cross-encoder)**
+- 질의-문서 결합 어텐션으로 bi-encoder 검색 결과를 top-20→5 재정렬, 상위 정밀도 보강.
+- 효과를 청킹별로 측정: 섹션 청킹엔 MRR +0.035, 코사인급락 청킹엔 손해 — "리랭커는 항상 이득"이 아님을 실측(청킹×리랭커 상호작용). 검색 개선이 답변정확도로 전환되지 않는 지점도 RAGAS로 포착.
+- FlagReranker의 slow-tokenizer 비호환(transformers 5.x)을 AutoModelForSequenceClassification 직접 로드로 우회.
+
 ## 검색 평가 (골든셋 32문항, page-level relevance)
 | 청킹 | 방법 | hit@1 | hit@3 | hit@5 | MRR |
 |---|---|---|---|---|---|

@@ -22,3 +22,6 @@ data/*.pdf
 *.jpg
 diag.py
 patch_pages.py
+
+data/parsed/
+data/ragas/_section.md

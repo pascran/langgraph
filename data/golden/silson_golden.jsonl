@@ -1,0 +1,32 @@
+{"id": "g001", "question": "담보종목이 몇 개이고 무엇인가?", "answer": "신상해입원, 상해통원, 신질병입원, 질병통원의 4개", "source": "p19 조항1(담보종목)", "category": "보장", "type": "fact", "difficulty": "easy"}
+{"id": "g002", "question": "입원의료비 보험가입금액의 최고한도는?", "answer": "5,000만원(계약자가 정하는 금액, 최고 5천만원)", "source": "p19 조항3(1)", "category": "한도", "type": "fact", "difficulty": "easy"}
+{"id": "g003", "question": "표준형 입원의료비의 보상 비율(자기부담률)은?", "answer": "급여 본인부담금+비급여 합계액의 80% 해당액(자기부담 20%)", "source": "p19 조항3(1) 표준형", "category": "보장", "type": "table", "difficulty": "easy"}
+{"id": "g004", "question": "선택형 입원의료비의 자기부담률은?", "answer": "10%(90% 보상)", "source": "p20 선택형", "category": "보장", "type": "table", "difficulty": "medium"}
+{"id": "g005", "question": "상급병실료 차액은 어떻게 보상하나?", "answer": "병실료 차액의 50%를 공제한 금액, 1일 평균 10만원 한도", "source": "p19 상급병실료차액", "category": "한도", "type": "table", "difficulty": "medium"}
+{"id": "g006", "question": "하나의 상해로 인한 입원의료비 보상 기간은?", "answer": "최초 입원일로부터 365일까지", "source": "p20", "category": "보장", "type": "fact", "difficulty": "medium"}
+{"id": "g007", "question": "국민건강보험을 적용받지 못하는 경우 입원의료비 보상률은?", "answer": "본인이 실제 부담한 금액의 40%", "source": "p20", "category": "보장", "type": "fact", "difficulty": "medium"}
+{"id": "g008", "question": "상해통원 외래의료비의 연간 방문 한도는?", "answer": "매년 계약해당일로부터 1년간 180회", "source": "p20", "category": "한도", "type": "table", "difficulty": "medium"}
+{"id": "g009", "question": "통원 외래·약제의료비의 회(건)당 최고한도는?", "answer": "외래·약제 합산 30만원(계약자가 정하는 금액)", "source": "p21 주2)", "category": "한도", "type": "table", "difficulty": "medium"}
+{"id": "g010", "question": "선택형 통원에서 상급종합병원(종합전문요양기관) 외래 공제금액은?", "answer": "2만원", "source": "p21 표1(선택형)", "category": "한도", "type": "table", "difficulty": "hard"}
+{"id": "g011", "question": "선택형 통원에서 의원 외래 공제금액은?", "answer": "1만원", "source": "p21 표1(선택형)", "category": "한도", "type": "table", "difficulty": "medium"}
+{"id": "g012", "question": "통원 약제의료비(처방조제비)의 공제금액(선택형)은?", "answer": "8천원", "source": "p21 표1(선택형)", "category": "한도", "type": "table", "difficulty": "medium"}
+{"id": "g013", "question": "표준형 통원에서 의원 외래 공제금액은?", "answer": "1만원과 보상대상의료비의 20% 중 큰 금액", "source": "p21 표1(표준형)", "category": "한도", "type": "table", "difficulty": "hard"}
+{"id": "g014", "question": "표준형 입원에서 자기부담 20%가 연간 250만원인 경우 실제 본인부담액은?", "answer": "200만원(연 200만원 초과분은 회사가 보상하므로 초과 50만원은 보상)", "source": "p19 단서", "category": "보장", "type": "reasoning", "difficulty": "hard"}
+{"id": "g015", "question": "하나의 상해로 365일을 넘겨 입원할 경우 다시 보상받으려면?", "answer": "90일간의 보상제외기간이 지났거나, 최종 입원 퇴원일로부터 180일이 경과해 재입원한 경우", "source": "p20", "category": "보장", "type": "reasoning", "difficulty": "hard"}
+{"id": "g016", "question": "하루에 같은 상해로 2회 통원치료 시 공제는 어떻게 되나?", "answer": "1회의 외래로 간주하며, 중복 방문 시 가장 높은 공제금액을 1회만 공제", "source": "p21", "category": "절차", "type": "conditional", "difficulty": "medium"}
+{"id": "g017", "question": "임신·출산·산후기로 입원한 경우 보상되나?", "answer": "원칙적으로 보상하지 않음. 단 회사가 보상하는 상해로 인한 경우에는 보상", "source": "p25 조항4(1)④", "category": "면책", "type": "exclusion", "difficulty": "easy"}
+{"id": "g018", "question": "비만(E66)으로 입원한 경우 보상되나?", "answer": "보상하지 않음(신질병입원 한국표준질병사인분류 면책)", "source": "p26 조항4(3)", "category": "면책", "type": "exclusion", "difficulty": "medium"}
+{"id": "g019", "question": "쌍꺼풀수술 등 외모 개선 목적 치료는 보상되나?", "answer": "보상하지 않음", "source": "p25 조항4(1)⑦", "category": "면책", "type": "exclusion", "difficulty": "medium"}
+{"id": "g020", "question": "해외 소재 의료기관에서 발생한 의료비는 보상되나?", "answer": "보상하지 않음(국민건강보험법 제42조 요양기관이 아닌 해외 의료기관)", "source": "p25 조항4(1)⑩", "category": "면책", "type": "exclusion", "difficulty": "medium"}
+{"id": "g021", "question": "정신과질환 및 행동장애(F04~F99)로 입원 시 보상되나?", "answer": "보상하지 않음", "source": "p26 조항4(3)①", "category": "면책", "type": "exclusion", "difficulty": "hard"}
+{"id": "g022", "question": "건강검진·예방접종·인공유산은 보상되나?", "answer": "원칙적으로 보상하지 않음. 단 회사가 보상하는 상해 치료 목적인 경우 보상", "source": "p25 조항4(1)④", "category": "면책", "type": "exclusion", "difficulty": "medium"}
+{"id": "g023", "question": "자동차보험이나 산재보험에서 보상받는 의료비는?", "answer": "보상하지 않음. 다만 본인부담 의료비는 담보종목별 보장내용에 따라 보상", "source": "p25 조항4(1)⑨", "category": "면책", "type": "exclusion", "difficulty": "hard"}
+{"id": "g024", "question": "피보험자의 정의는?", "answer": "보험사고 발생의 대상이 되는 사람", "source": "p10 보험용어해설 라", "category": "정의", "type": "definition", "difficulty": "easy"}
+{"id": "g025", "question": "실손의료비의 범위는?", "answer": "총 진료비 중 국민건강보험에서 부담한 금액을 제외하고 환자 본인이 부담한 금액(급여 본인부담금 + 비급여)", "source": "p7 가입자유의사항", "category": "정의", "type": "definition", "difficulty": "easy"}
+{"id": "g026", "question": "청약철회는 언제까지 가능한가?", "answer": "보험증권을 받은 날로부터 15일 이내(청약한 날로부터 30일 초과 시 불가)", "source": "p8 나.청약철회", "category": "절차", "type": "fact", "difficulty": "easy"}
+{"id": "g027", "question": "청약을 철회할 수 없는 계약은?", "answer": "진단계약, 단체(취급)계약, 보험기간 1년 미만 계약, 청약한 날로부터 30일 초과한 경우", "source": "p8 나.", "category": "절차", "type": "conditional", "difficulty": "medium"}
+{"id": "g028", "question": "계약 취소는 언제까지 가능한가?", "answer": "청약일로부터 3개월 이내(약관·청약서 미전달, 중요내용 미설명, 자필서명 누락 시)", "source": "p8 다.계약취소", "category": "절차", "type": "fact", "difficulty": "medium"}
+{"id": "g029", "question": "보험료 납입연체로 해지된 계약의 부활(효력회복) 청약 기간은?", "answer": "해지된 날부터 2년 이내", "source": "p8 사./조항31", "category": "절차", "type": "fact", "difficulty": "medium"}
+{"id": "g030", "question": "보험금은 청구 후 언제까지 지급되나?", "answer": "청구서류를 접수한 날부터 3영업일 이내(조사 필요 시 추정보험금 50% 이내 가지급)", "source": "p9 자.", "category": "절차", "type": "fact", "difficulty": "medium"}
+{"id": "g031", "question": "통원 청구금액 3만원 이하인 경우 서류 제출은?", "answer": "진단명·통원일자 포함 서류의 제출을 생략 가능(산부인과·항문외과·비뇨기과·피부과 등 제외)", "source": "p11 통원 외래의료비", "category": "절차", "type": "conditional", "difficulty": "hard"}
+{"id": "g032", "question": "이 실손의료비보험에서 정액 사망보험금이 지급되나?", "answer": "아니오. 실손의료비보험은 질병·상해로 인한 의료비 손해를 실손 보상하는 상품으로, 정액 사망보험금 담보가 아님", "source": "p19 서두", "category": "함정", "type": "trap", "difficulty": "hard"}

@@ -18,11 +18,11 @@ def jparse(s):
 def faith(ans,ctx):   # RAGAS faithfulness: 답변 주장 중 문맥근거 비율
     c="\n".join(ctx)[:4000]
     r=jparse(chat("답변을 단순 사실문장으로 나눈 뒤, 각 문장이 문맥에서 추론가능한지 세어 JSON만 출력.",f"[문맥]\n{c}\n\n[답변]{ans}\n\n형식만: {{\"supported\":정수,\"total\":정수}}",100))
-    return (r['supported']/r['total']) if r and r.get('total') else float('nan')
+    return min(r['supported']/r['total'],1.0) if r and r.get('total') else float('nan')  # 클램프: supported>total 방지
 def crecall(gt,ctx):  # RAGAS context_recall: 정답 문장 중 문맥귀속 비율
     c="\n".join(ctx)[:4000]
     r=jparse(chat("정답을 사실문장으로 나눈 뒤, 각 문장이 문맥에 귀속가능한지 세어 JSON만 출력.",f"[문맥]\n{c}\n\n[정답]{gt}\n\n형식만: {{\"attributable\":정수,\"total\":정수}}",100))
-    return (r['attributable']/r['total']) if r and r.get('total') else float('nan')
+    return min(r['attributable']/r['total'],1.0) if r and r.get('total') else float('nan')  # 클램프
 def acorr(ans,gt):    # RAGAS answer_correctness: 0.75*F1(사실) + 0.25*의미유사도
     r=jparse(chat("답변과 정답을 사실 단위로 비교. tp=양쪽공통, fp=답변에만, fn=정답에만. JSON만.",f"[정답]{gt}\n[답변]{ans}\n형식만: {{\"tp\":정수,\"fp\":정수,\"fn\":정수}}",80))
     f1=float('nan')

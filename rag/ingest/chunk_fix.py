@@ -43,6 +43,9 @@ sv=lambda lw:models.SparseVector(indices=[int(k) for k in lw],values=[float(v) f
 try: cli.delete_collection(C)
 except: pass
 cli.create_collection(C,vectors_config={"dense":models.VectorParams(size=1024,distance=models.Distance.COSINE)},sparse_vectors_config={"sparse":models.SparseVectorParams()})
+# payload 인덱스: 담보종목·표유형·페이지 스코프 필터검색(filterable HNSW)
+for _fld,_sch in [("dambo",models.PayloadSchemaType.KEYWORD),("btype",models.PayloadSchemaType.KEYWORD),("pages",models.PayloadSchemaType.INTEGER)]:
+    cli.create_payload_index(C,field_name=_fld,field_schema=_sch)
 P=[models.PointStruct(id=str(uuid.uuid4()),vector={"dense":emb['dense_vecs'][i].tolist(),"sparse":sv(emb['lexical_weights'][i])},payload={"text":c['text'],"dambo":c['meta'].get('dambo'),"pages":c['meta'].get('pages'),"btype":c['meta'].get('btype')}) for i,c in enumerate(chunks)]
 for k in range(0,len(P),128): cli.upsert(C,P[k:k+128])
 print("INDEXED",cli.count(C).count)

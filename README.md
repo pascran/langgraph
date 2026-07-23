@@ -154,16 +154,26 @@ answer_correctness의 로컬 8B 심판 노이즈를 검증하기 위해, 동일 
 ## 실행
 ```bash
 # 사전: Qdrant(:6333) · 생성 vLLM(:8001) · 심판 vLLM(:8002, Qwen3-32B)
-.venv-rag/bin/python rag/ingest/chunk_fix.py     # 청킹·인덱싱 (silson_v2_sem)
-.venv-rag/bin/python rag/eval/eval.py            # 검색 hit@k/MRR + 리랭커 델타
-.venv-rag/bin/python rag/eval/qdrant_tune.py     # ef_search 튜닝 + payload 필터검색
-.venv-rag/bin/python rag/graph/agentic_rag.py    # LangGraph 에이전틱 RAG
-.venv-rag/bin/python rag/eval/build_ladder.py    # RAGAS ablation 데이터셋 L0~L4
-.venv-rag/bin/python rag/eval/custom_ragas.py    # 답변품질 3지표(8B 심판)
-.venv-rag/bin/python rag/eval/critic_rescore.py  # 32B 심판 재채점
+pip install -e .                                 # rag 패키지 설치(rag.core 임포트)
+python -m pytest rag/tests                        # 순수 단위테스트 19개(GPU 불필요)
+python -m rag.ingest.chunk_fix                    # 청킹·인덱싱 (silson_v2_sem, payload 인덱스 포함)
+python -m rag.eval.eval                           # 검색 hit@k/MRR + 리랭커 델타
+python -m rag.graph.agentic_rag                   # LangGraph 에이전틱 RAG (27B thinking)
+python -m rag.eval.custom_ragas                   # 답변품질 3지표(8B 심판)
+python -m rag.eval.critic_rescore                 # 32B 심판 재채점
 # 생성 모델 비교(순차 배치): 27B 단독 생성 → 컨테이너 교체 → 32B 단독 판정
-.venv-rag/bin/python rag/eval/batch_gen.py       # 27B 답변 생성(증분저장·재개)
-.venv-rag/bin/python rag/eval/batch_judge.py     # 8B vs 27B F1 판정
+python -m rag.eval.batch_gen                       # 27B 답변 생성(증분저장·재개)
+python -m rag.eval.batch_judge                     # 8B vs 27B F1 판정
+```
+
+## 코드 구조
+```
+rag/core/       config·tables·metrics·llm·embedder·chunk   # 공유 라이브러리(중복 정본화)
+rag/retrieval/  retriever(하이브리드 RRF)·parent(small-to-big)
+rag/ingest/     ocr_all·parse·validate_kie·teds·chunk_fix
+rag/graph/      agentic_rag                                 # LangGraph(core 사용)
+rag/eval/       ladder·custom_ragas·critic_rescore·batch_*  # 평가 하네스
+rag/tests/      test_tables·test_metrics·test_chunk         # 19 유닛테스트
 ```
 
 ## 측정 환경 및 한계

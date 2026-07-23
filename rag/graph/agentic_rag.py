@@ -15,6 +15,12 @@ _gen = LLMClient(config.GEN_URL, config.GEN_MODEL, timeout=300)  # ThinkingCap-2
 PAGES = build_pages(config.BLOCKS, table_fmt="text")        # small-to-big 부모(정제 텍스트)
 
 
+# 하위호환: 기존 eval 스크립트가 import하던 심볼(점진적 core 이관 전까지 유지)
+m = _emb.m
+cli = _retr.cli
+sv = Embedder.sparse_vec
+
+
 def chat(system, user, mx=256, think=False):
     return _gen.chat(system, user, max_tokens=mx, think=think)
 

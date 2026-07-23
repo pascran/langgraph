@@ -31,11 +31,14 @@ START → route ──(잡담)── direct ── END
           │(검색)
        retrieve → grade(CRAG) ──(관련0)── transform ─→ retrieve  (재시도 ≤2)
           │(관련)
-       generate(부모 페이지) → Self-RAG ──(비근거)── transform
+       generate(부모 페이지, 27B thinking) → Self-RAG ──(비근거)── transform
           │(근거)
          END
 ```
 2-way LLM 라우터, CRAG 재검색 루프, small-to-big 생성, Self-RAG 근거검증. 조건부 엣지 + MemorySaver 체크포인터.
+- **생성 노드 = ThinkingCap-27B(단계추론 ON)**; 라우팅·채점 등 짧은 결정은 thinking OFF.
+- **CRAG 폴백**: 채점이 문서를 전부 걸러도 원검색 결과로 생성(CRAG가 no-CRAG보다 나빠지지 않도록) — 계산형 질문에서 CRAG 과필터로 답을 못 내던 회귀 제거.
+- **Self-RAG 근거검증은 생성과 동일 문맥(부모 페이지)** 으로 수행(기존엔 작은 청크로 검증해 거짓 "비근거" 발생하던 버그 수정).
 
 ## 검색 스택
 단일 모델·단일 컬렉션으로 dense+sparse 하이브리드를 구성하고, 각 요소의 기여를 골든셋으로 측정했다.
@@ -166,6 +169,7 @@ answer_correctness의 로컬 8B 심판 노이즈를 검증하기 위해, 동일 
 ## 측정 환경 및 한계
 - 인덱싱: 벡터 193개 규모에서 Qdrant가 exact search로 폴백, ef_search 튜닝 효과 없음(recall@10 전 구간 1.0). payload 인덱스(dambo/btype/pages)로 담보종목·표·페이지 스코프 필터검색 제공.
 - RAGAS 라이브러리는 로컬 vLLM에 대해 순차 호출(동시 1)로 비실용적(~60분). 지표 정의(faithfulness, context_recall, answer_correctness=0.75·F1+0.25·의미유사도)를 스레드 병렬로 직접 구현.
+- 지표 견고성: faithfulness/context_recall에 상한 클램프(`min(..,1.0)`) 적용(LLM이 supported>total로 셀 때 방지). 저장된 L0~L4 데이터엔 초과값이 없어 **발표 수치는 무영향**(잠복 버그, 코드만 수정). 검색 hit@1/MRR은 uuid4 포인트ID 타이브레이크로 ±노이즈(재현성은 content-hash ID로 개선 여지).
 - 심판 검증: 8B 심판의 결론 일부(리랭커·에이전틱의 answer_correctness 영향)가 32B 심판 재채점에서 뒤집힘 — 컴포넌트 단위 답변정확도 결론은 심판 의존적.
 - 표·수치 병목은 OCR/표현이 아니라 **생성-추론**으로 규명·해소(27B thinking, 표 F1 +55%). OCR 교체는 데이터상 불필요로 보류.
 - GB10(ARM64/CUDA13) 단일 GPU는 다중 모델+임베딩 동시 워크로드에서 불안정 → 평가는 "한 모델만 상주" 순차 배치로 수행. 27B는 지속부하에 degrade(주기적 재시작·단문항 배치 필요). 27B 전량 커버리지(32/32)는 안정 환경/off-peak에서 완주.

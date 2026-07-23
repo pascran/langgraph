@@ -29,7 +29,7 @@ def search(q,k=5):
     pts=cli.query_points("silson_v2_sem",prefetch=[models.Prefetch(query=e['dense_vecs'][0].tolist(),using="dense",limit=30),models.Prefetch(query=sv(e['lexical_weights'][0]),using="sparse",limit=30)],query=models.FusionQuery(fusion=models.Fusion.RRF),limit=k,with_payload=True).points
     return [{"text":p.payload['text'],"pages":p.payload.get('pages')} for p in pts]
 class State(TypedDict):
-    question:str; orig:str; route:str; documents:list; generation:str; tries:int; log:list; gen_ctx:str
+    question:str; orig:str; route:str; documents:list; retrieved:list; generation:str; tries:int; log:list; gen_ctx:str
 def n_route(s):   # 2-way: 잡담(direct) / 검색(retrieve)
     r=chat("질문을 분류: 보험약관 내용을 찾아야 하면 retrieve, 단순 인사·잡담·일반상식이면 direct. 한 단어만.",s['orig'],4).lower()
     dec='direct' if r.startswith('d') else 'retrieve'
@@ -38,7 +38,7 @@ def n_direct(s):
     a=chat("보험약관 상담 어시스턴트. 인사·잡담엔 짧게 응대하고 약관 관련 질문을 하도록 안내. 1~2문장.",s['orig'],120)
     return {"generation":a,"log":s['log']+["direct 응답(검색 생략)"]}
 def n_retrieve(s):
-    d=search(s['question'],5); return {"documents":d,"log":s['log']+[f"retrieve → {len(d)}건(작은청크)"]}
+    d=search(s['question'],5); return {"documents":d,"retrieved":d,"log":s['log']+[f"retrieve → {len(d)}건(작은청크)"]}
 def n_grade(s):
     kept=[]
     for d in s['documents']:
@@ -49,7 +49,8 @@ def n_transform(s):
     nq=chat("검색이 잘 되도록 질문을 약관 전문용어로 다르게 1문장 재작성. 질문만.",s['orig']+f" (재시도{s.get('tries',0)+1})",48)
     return {"question":nq,"tries":s.get('tries',0)+1,"log":s['log']+[f"쿼리재작성 → '{nq[:38]}'"]}
 def n_generate(s):
-    pages=sorted({p for d in s['documents'] for p in (d['pages'] or [])})
+    docs=s['documents'] or s.get('retrieved') or []   # CRAG가 전부 걸러도 원검색으로 폴백(CRAG가 no-CRAG보다 나빠지지 않게)
+    pages=sorted({p for d in docs for p in (d['pages'] or [])})
     ctx="\n\n".join(f"[p{n}]\n{PAGES.get(n,'')[:3000]}" for n in pages) or "(문맥없음)"  # small-to-big 부모
     a=chat("약관 문맥에만 근거해 답하고 근거를 [pN]로. 계산이 필요하면 단계적으로 계산해 최종 수치를 명시. 면책(보상안함)/보상 명확히. 없으면 '약관에서 확인 불가'.",
            f"[문맥]\n{ctx}\n\n[질문]{s['orig']}",1536,think=True)   # 생성은 thinking ON
